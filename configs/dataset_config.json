@@ -1,0 +1,10 @@
+{
+  "seed": 42,
+  "n_samples": 1200,
+  "n_features": 20,
+  "n_classes": 4,
+  "class_sep": 1.5,
+  "train_ratio": 0.7,
+  "val_ratio": 0.15,
+  "test_ratio": 0.15
+}

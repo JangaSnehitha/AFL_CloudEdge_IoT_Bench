@@ -1,0 +1,7 @@
+{
+  "n_clients": 5,
+  "method": "dirichlet",
+  "alpha": 0.5,
+  "seed": 42,
+  "min_samples_per_client": 10
+}

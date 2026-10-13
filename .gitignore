@@ -1,0 +1,5 @@
+.venv/
+.venv-flower/
+__pycache__/
+*.pyc
+=1.70.0

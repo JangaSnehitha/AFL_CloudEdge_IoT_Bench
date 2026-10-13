@@ -1,0 +1,129 @@
+{
+  "config": {
+    "algorithm": "FedAvg",
+    "n_clients": 5,
+    "local_epochs": 1,
+    "num_rounds": 3,
+    "partition_method": "dirichlet",
+    "alpha": 0.5,
+    "seed": 42,
+    "batch_size": 32,
+    "lr": 0.01
+  },
+  "client_stats": [
+    {
+      "client_id": 0,
+      "n_samples": 244,
+      "class_counts": [
+        30,
+        51,
+        147,
+        16
+      ],
+      "class_fractions": [
+        0.12295081967213115,
+        0.20901639344262296,
+        0.6024590163934426,
+        0.06557377049180328
+      ]
+    },
+    {
+      "client_id": 1,
+      "n_samples": 129,
+      "class_counts": [
+        6,
+        104,
+        19,
+        0
+      ],
+      "class_fractions": [
+        0.046511627906976744,
+        0.8062015503875969,
+        0.14728682170542637,
+        0.0
+      ]
+    },
+    {
+      "client_id": 2,
+      "n_samples": 142,
+      "class_counts": [
+        24,
+        5,
+        26,
+        87
+      ],
+      "class_fractions": [
+        0.16901408450704225,
+        0.035211267605633804,
+        0.18309859154929578,
+        0.6126760563380281
+      ]
+    },
+    {
+      "client_id": 3,
+      "n_samples": 130,
+      "class_counts": [
+        0,
+        32,
+        1,
+        97
+      ],
+      "class_fractions": [
+        0.0,
+        0.24615384615384617,
+        0.007692307692307693,
+        0.7461538461538462
+      ]
+    },
+    {
+      "client_id": 4,
+      "n_samples": 195,
+      "class_counts": [
+        148,
+        25,
+        9,
+        13
+      ],
+      "class_fractions": [
+        0.7589743589743589,
+        0.1282051282051282,
+        0.046153846153846156,
+        0.06666666666666667
+      ]
+    }
+  ],
+  "initial": {
+    "round": 0,
+    "val_loss": 1.383192,
+    "val_accuracy": 0.267708,
+    "test_loss": 1.366394,
+    "test_accuracy": 0.260417
+  },
+  "history": [
+    {
+      "round": 1,
+      "val_loss": 1.350564,
+      "val_accuracy": 0.336458,
+      "test_loss": 1.333934,
+      "test_accuracy": 0.379167
+    },
+    {
+      "round": 2,
+      "val_loss": 1.317179,
+      "val_accuracy": 0.541667,
+      "test_loss": 1.299623,
+      "test_accuracy": 0.553125
+    },
+    {
+      "round": 3,
+      "val_loss": 1.280954,
+      "val_accuracy": 0.773958,
+      "test_loss": 1.262517,
+      "test_accuracy": 0.78125
+    }
+  ],
+  "test": {
+    "loss": 1.262517,
+    "accuracy": 0.78125
+  }
+}

@@ -105,11 +105,20 @@ def run_fedavg_simulation(
         min_samples_per_client=fedavg_config.min_samples_per_client,
     )
 
-    client_loaders, val_loader, test_loader = load_partitioned_dataloaders(
+    client_loaders, val_loader, test_loader, partition_stats = load_partitioned_dataloaders(
         dataset_config=dataset_config,
         partition_config=partition_config,
         batch_size=fedavg_config.batch_size,
+        return_stats=True,
     )
+
+    # Print partition statistics before training begins
+    method_label = f"Dirichlet non-IID (alpha={fedavg_config.alpha})" if fedavg_config.partition_method == "dirichlet" else "IID"
+    print(f"\n--- Client Partitioning: {method_label} ---")
+    for stat in partition_stats:
+        fractions_str = ", ".join(f"{f:.3f}" for f in stat["class_fractions"])
+        print(f"Client {stat['client_id']}: {stat['n_samples']} samples | counts: {stat['class_counts']} | fractions: [{fractions_str}]")
+    print("-------------------------------------------\n")
 
     init_model = build_model(model_config)
     initial_params = ndarrays_to_parameters(get_model_parameters(init_model))
@@ -166,6 +175,7 @@ def run_fedavg_simulation(
             "batch_size": fedavg_config.batch_size,
             "lr": fedavg_config.lr,
         },
+        "client_stats": partition_stats,
         "initial": initial_metrics,
         "history": history,
         "test": {

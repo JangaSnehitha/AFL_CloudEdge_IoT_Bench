@@ -15,7 +15,7 @@ from src.dataset import (
     split_data,
 )
 from src.model import MLPConfig, build_criterion, build_model, build_optimizer
-from src.partition import PartitionConfig, partition_data
+from src.partition import PartitionConfig, compute_partition_stats, partition_data
 from src.trainer import evaluate, train_one_epoch
 
 
@@ -115,11 +115,16 @@ def load_partitioned_dataloaders(
     dataset_config: SyntheticDatasetConfig,
     partition_config: PartitionConfig,
     batch_size: int = 32,
-) -> Tuple[List[DataLoader], DataLoader, DataLoader]:
+    return_stats: bool = False,
+) -> Union[
+    Tuple[List[DataLoader], DataLoader, DataLoader],
+    Tuple[List[DataLoader], DataLoader, DataLoader, List[Dict[str, Any]]],
+]:
     """Generate synthetic dataset, normalize, partition training split, and return DataLoaders.
 
     Returns:
-        (client_loaders, val_loader, test_loader)
+        (client_loaders, val_loader, test_loader) if return_stats=False,
+        else (client_loaders, val_loader, test_loader, partition_stats)
     """
     x, y = generate_synthetic_classification_data(dataset_config)
     splits = split_data(x, y, dataset_config)
@@ -139,6 +144,7 @@ def load_partitioned_dataloaders(
 
     # Partition the normalized training split
     partitions = partition_data(x_train_norm, y_train, partition_config)
+    stats = compute_partition_stats(partitions, dataset_config.n_classes)
 
     client_loaders: List[DataLoader] = []
     for x_c, y_c in partitions:
@@ -155,6 +161,8 @@ def load_partitioned_dataloaders(
     )
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
+    if return_stats:
+        return client_loaders, val_loader, test_loader, stats
     return client_loaders, val_loader, test_loader
 
 

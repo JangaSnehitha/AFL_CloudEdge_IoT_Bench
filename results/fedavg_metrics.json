@@ -1,0 +1,47 @@
+{
+  "config": {
+    "algorithm": "FedAvg",
+    "n_clients": 5,
+    "local_epochs": 1,
+    "num_rounds": 3,
+    "partition_method": "iid",
+    "alpha": 0.5,
+    "seed": 42,
+    "batch_size": 32,
+    "lr": 0.01
+  },
+  "initial": {
+    "round": 0,
+    "val_loss": 1.383192,
+    "val_accuracy": 0.267708,
+    "test_loss": 1.366394,
+    "test_accuracy": 0.260417
+  },
+  "history": [
+    {
+      "round": 1,
+      "val_loss": 1.357576,
+      "val_accuracy": 0.315625,
+      "test_loss": 1.340479,
+      "test_accuracy": 0.363542
+    },
+    {
+      "round": 2,
+      "val_loss": 1.331538,
+      "val_accuracy": 0.407292,
+      "test_loss": 1.313423,
+      "test_accuracy": 0.458333
+    },
+    {
+      "round": 3,
+      "val_loss": 1.303423,
+      "val_accuracy": 0.538542,
+      "test_loss": 1.284514,
+      "test_accuracy": 0.56875
+    }
+  ],
+  "test": {
+    "loss": 1.284514,
+    "accuracy": 0.56875
+  }
+}

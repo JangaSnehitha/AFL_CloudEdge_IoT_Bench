@@ -17,6 +17,11 @@ from src.client import (
 from src.dataset import SyntheticDatasetConfig
 from src.model import MLPConfig, build_model
 from src.partition import PartitionConfig
+from src.staleness import (
+    StalenessConfig,
+    StalenessSimulator,
+    save_client_updates_csv,
+)
 from src.strategy import FedAvgStrategy, create_evaluate_fn
 from src.trainer import save_results, set_seed
 
@@ -34,6 +39,10 @@ class FedAvgConfig:
     batch_size: int = 32
     lr: float = 0.01
     min_samples_per_client: int = 10
+    delay_distribution: str = "zero"
+    max_delay: int = 0
+    staleness_threshold: Optional[int] = None
+    staleness_seed: int = 42
 
     def __post_init__(self) -> None:
         if self.n_clients < 1:
@@ -52,6 +61,12 @@ class FedAvgConfig:
             raise ValueError("lr must be > 0")
         if self.min_samples_per_client < 1:
             raise ValueError("min_samples_per_client must be >= 1")
+        if self.delay_distribution not in ("uniform", "constant", "poisson", "exponential", "zero"):
+            raise ValueError(f"Unsupported delay_distribution: {self.delay_distribution}")
+        if self.max_delay < 0:
+            raise ValueError("max_delay must be >= 0")
+        if self.staleness_threshold is not None and self.staleness_threshold < 0:
+            raise ValueError("staleness_threshold must be >= 0")
 
     @classmethod
     def from_json(cls, path: Union[str, Path]) -> "FedAvgConfig":
@@ -65,19 +80,21 @@ def run_fedavg_simulation(
     dataset_config: Optional[SyntheticDatasetConfig] = None,
     model_config: Optional[MLPConfig] = None,
     results_path: Optional[Union[str, Path]] = None,
+    csv_path: Optional[Union[str, Path]] = None,
     ray_init_args: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """Execute synchronous FedAvg using Flower Simulation.
+    """Execute synchronous FedAvg using Flower Simulation with staleness instrumentation.
 
     Args:
         fedavg_config: Hyperparameters for federated training.
         dataset_config: Dataset generation config (optional, loaded from configs/ if None).
         model_config: Model architecture config (optional, loaded from configs/ if None).
         results_path: Optional path to save JSON metrics.
+        csv_path: Optional path to save CSV of client update metrics.
         ray_init_args: Optional arguments passed to Ray initialization.
 
     Returns:
-        Structured dictionary containing run configuration, per-round history, and final test metrics.
+        Structured dictionary containing run configuration, per-round history, client updates, and final test metrics.
     """
     set_seed(fedavg_config.seed)
 
@@ -133,12 +150,26 @@ def run_fedavg_simulation(
         initial_metrics=initial_metrics,
     )
 
+    staleness_cfg = StalenessConfig(
+        distribution=fedavg_config.delay_distribution,
+        max_delay=fedavg_config.max_delay,
+        staleness_threshold=fedavg_config.staleness_threshold,
+        seed=fedavg_config.staleness_seed,
+    )
+    staleness_simulator = StalenessSimulator(staleness_cfg)
+    client_updates: List[Dict[str, Any]] = []
+
     strategy = FedAvgStrategy(
         initial_parameters=initial_params,
         evaluate_fn=evaluate_fn,
         min_fit_clients=fedavg_config.n_clients,
         min_available_clients=fedavg_config.n_clients,
         fraction_fit=1.0,
+        staleness_simulator=staleness_simulator,
+        partition_method=fedavg_config.partition_method,
+        alpha=fedavg_config.alpha,
+        local_epochs=fedavg_config.local_epochs,
+        client_updates=client_updates,
     )
 
     client_fn = create_client_fn(
@@ -174,8 +205,13 @@ def run_fedavg_simulation(
             "seed": fedavg_config.seed,
             "batch_size": fedavg_config.batch_size,
             "lr": fedavg_config.lr,
+            "delay_distribution": fedavg_config.delay_distribution,
+            "max_delay": fedavg_config.max_delay,
+            "staleness_threshold": fedavg_config.staleness_threshold,
+            "staleness_seed": fedavg_config.staleness_seed,
         },
         "client_stats": partition_stats,
+        "client_updates": client_updates,
         "initial": initial_metrics,
         "history": history,
         "test": {
@@ -187,12 +223,15 @@ def run_fedavg_simulation(
     if results_path is not None:
         save_results(results, results_path)
 
+    if csv_path is not None:
+        save_client_updates_csv(client_updates, csv_path)
+
     return results
 
 
 def main() -> None:
     """CLI entry point for running FedAvg experiments."""
-    parser = argparse.ArgumentParser(description="Synchronous FedAvg Simulation")
+    parser = argparse.ArgumentParser(description="Synchronous FedAvg Simulation with Staleness Instrumentation")
     parser.add_argument(
         "--config",
         type=str,
@@ -204,6 +243,12 @@ def main() -> None:
         type=str,
         default="results/fedavg_metrics.json",
         help="Path to save results JSON",
+    )
+    parser.add_argument(
+        "--csv",
+        type=str,
+        default=None,
+        help="Optional path to save client updates CSV",
     )
     parser.add_argument("--clients", type=int, default=None, help="Number of clients")
     parser.add_argument("--rounds", type=int, default=None, help="Communication rounds")
@@ -219,6 +264,16 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=None, help="Random seed")
     parser.add_argument("--lr", type=float, default=None, help="Learning rate")
     parser.add_argument("--batch-size", type=int, default=None, help="Batch size")
+    parser.add_argument(
+        "--delay-dist",
+        type=str,
+        choices=["uniform", "constant", "poisson", "exponential", "zero"],
+        default=None,
+        help="Simulated update delay distribution",
+    )
+    parser.add_argument("--max-delay", type=int, default=None, help="Maximum simulated delay")
+    parser.add_argument("--staleness-threshold", type=int, default=None, help="Acceptance threshold for staleness")
+    parser.add_argument("--staleness-seed", type=int, default=None, help="RNG seed for staleness delay generation")
 
     args = parser.parse_args()
 
@@ -244,8 +299,20 @@ def main() -> None:
         cfg.lr = args.lr
     if args.batch_size is not None:
         cfg.batch_size = args.batch_size
+    if args.delay_dist is not None:
+        cfg.delay_distribution = args.delay_dist
+    if args.max_delay is not None:
+        cfg.max_delay = args.max_delay
+    if args.staleness_threshold is not None:
+        cfg.staleness_threshold = args.staleness_threshold
+    if args.staleness_seed is not None:
+        cfg.staleness_seed = args.staleness_seed
 
-    results = run_fedavg_simulation(fedavg_config=cfg, results_path=args.output)
+    results = run_fedavg_simulation(
+        fedavg_config=cfg,
+        results_path=args.output,
+        csv_path=args.csv,
+    )
     print("FedAvg simulation completed.")
     if results.get("test"):
         print(f"Final Test Accuracy: {results['test']['accuracy']}")

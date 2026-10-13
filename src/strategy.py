@@ -1,4 +1,4 @@
-"""Synchronous FedAvg server strategy with sample-size-weighted aggregation and global evaluation."""
+"""Synchronous FedAvg server strategy with sample-size-weighted aggregation, global evaluation, and staleness instrumentation."""
 
 from functools import reduce
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -18,6 +18,7 @@ from flwr.server.strategy import FedAvg
 
 from src.client import set_model_parameters
 from src.model import MLPConfig, build_criterion, build_model
+from src.staleness import StalenessSimulator
 from src.trainer import evaluate
 
 
@@ -110,7 +111,7 @@ def create_evaluate_fn(
 
 
 class FedAvgStrategy(FedAvg):
-    """Synchronous FedAvg strategy with sample-size-weighted aggregation."""
+    """Synchronous FedAvg strategy with sample-size-weighted aggregation and staleness logging."""
 
     def __init__(
         self,
@@ -122,6 +123,11 @@ class FedAvgStrategy(FedAvg):
         fraction_evaluate: float = 0.0,
         min_evaluate_clients: int = 0,
         on_fit_config_fn: Optional[Callable[[int], Dict[str, Any]]] = None,
+        staleness_simulator: Optional[StalenessSimulator] = None,
+        partition_method: str = "iid",
+        alpha: float = 0.5,
+        local_epochs: int = 1,
+        client_updates: Optional[List[Dict[str, Any]]] = None,
     ) -> None:
         super().__init__(
             fraction_fit=fraction_fit,
@@ -133,6 +139,11 @@ class FedAvgStrategy(FedAvg):
             on_fit_config_fn=on_fit_config_fn,
             initial_parameters=initial_parameters,
         )
+        self.staleness_simulator = staleness_simulator
+        self.partition_method = partition_method
+        self.alpha = alpha
+        self.local_epochs = local_epochs
+        self.client_updates = client_updates
 
     def aggregate_fit(
         self,
@@ -140,16 +151,48 @@ class FedAvgStrategy(FedAvg):
         results: List[Tuple[ClientProxy, FitRes]],
         failures: List[Union[Tuple[ClientProxy, FitRes], BaseException]],
     ) -> Tuple[Optional[Parameters], Dict[str, Any]]:
-        """Aggregate fit results using sample-size-weighted averaging."""
+        """Aggregate fit results using sample-size-weighted averaging and log update staleness."""
         if not results:
             return None, {}
 
-        # Do not aggregate if there are failures and we require all clients
-        weights_and_counts = [
-            (parameters_to_ndarrays(fit_res.parameters), fit_res.num_examples)
-            for _, fit_res in results
-        ]
+        # Log individual client updates with simulated delay and staleness
+        weights_and_counts = []
+        for _, fit_res in results:
+            cid = int(fit_res.metrics.get("cid", 0))
+            client_loss = float(fit_res.metrics.get("loss", 0.0))
+            num_examples = fit_res.num_examples
 
+            if self.staleness_simulator is not None:
+                delay = self.staleness_simulator.sample_delay(cid, server_round)
+                staleness = self.staleness_simulator.calculate_staleness(delay)
+                accepted = self.staleness_simulator.is_accepted(staleness)
+            else:
+                delay = 0
+                staleness = 0
+                accepted = True
+
+            record: Dict[str, Any] = {
+                "client_id": cid,
+                "round": server_round,
+                "partition_method": self.partition_method,
+                "alpha": self.alpha,
+                "n_samples": num_examples,
+                "local_epochs": self.local_epochs,
+                "simulated_delay": delay,
+                "staleness": staleness,
+                "accepted": accepted,
+                "client_loss": round(client_loss, 6),
+                "num_examples": num_examples,
+            }
+
+            if self.client_updates is not None:
+                self.client_updates.append(record)
+
+            weights_and_counts.append(
+                (parameters_to_ndarrays(fit_res.parameters), fit_res.num_examples)
+            )
+
+        # Synchronous FedAvg sample-size-weighted aggregation behavior remains unchanged
         aggregated_ndarrays = aggregate_weighted_average(weights_and_counts)
         aggregated_parameters = ndarrays_to_parameters(aggregated_ndarrays)
 

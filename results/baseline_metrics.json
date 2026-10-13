@@ -1,0 +1,79 @@
+{
+  "config": {
+    "seed": 42,
+    "n_epochs": 10,
+    "batch_size": 32,
+    "optimizer": "sgd",
+    "lr": 0.01,
+    "hidden_dims": [
+      64,
+      32
+    ]
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 1.261219,
+      "val_loss": 1.047969,
+      "val_accuracy": 0.994792
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.624159,
+      "val_loss": 0.188809,
+      "val_accuracy": 1.0
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.086004,
+      "val_loss": 0.02941,
+      "val_accuracy": 1.0
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.025068,
+      "val_loss": 0.015106,
+      "val_accuracy": 1.0
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.015992,
+      "val_loss": 0.010724,
+      "val_accuracy": 1.0
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.011235,
+      "val_loss": 0.008411,
+      "val_accuracy": 1.0
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.009009,
+      "val_loss": 0.006974,
+      "val_accuracy": 1.0
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.007361,
+      "val_loss": 0.005976,
+      "val_accuracy": 1.0
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.006265,
+      "val_loss": 0.005286,
+      "val_accuracy": 1.0
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.005343,
+      "val_loss": 0.004693,
+      "val_accuracy": 1.0
+    }
+  ],
+  "test": {
+    "loss": 0.004424,
+    "accuracy": 1.0
+  }
+}

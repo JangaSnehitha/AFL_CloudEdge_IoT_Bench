@@ -1,0 +1,19 @@
+{
+  "n_clients": 5,
+  "max_updates": 15,
+  "local_epochs": 1,
+  "batch_size": 32,
+  "lr": 0.01,
+  "partition_method": "dirichlet",
+  "alpha": 0.5,
+  "seed": 42,
+  "alpha_0": 1.0,
+  "lambda_divergence": 0.5,
+  "lambda_reliability": 0.5,
+  "min_weight": 0.01,
+  "delay_distribution": "uniform",
+  "max_delay": 3,
+  "compute_time": 1.0,
+  "staleness_seed": 42,
+  "min_samples_per_client": 5
+}

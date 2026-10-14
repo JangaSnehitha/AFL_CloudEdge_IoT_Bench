@@ -1,0 +1,1092 @@
+{
+  "config": {
+    "algorithm": "FedBuff",
+    "n_clients": 5,
+    "max_updates": 15,
+    "buffer_size": 5,
+    "flush_final_buffer": false,
+    "local_epochs": 1,
+    "batch_size": 32,
+    "lr": 0.01,
+    "partition_method": "dirichlet",
+    "alpha": 0.5,
+    "seed": 42,
+    "delay_distribution": "uniform",
+    "max_delay": 3,
+    "compute_time": 1.0,
+    "staleness_seed": 42
+  },
+  "client_stats": [
+    {
+      "client_id": 0,
+      "n_samples": 244,
+      "class_counts": [
+        30,
+        51,
+        147,
+        16
+      ],
+      "class_fractions": [
+        0.12295081967213115,
+        0.20901639344262296,
+        0.6024590163934426,
+        0.06557377049180328
+      ]
+    },
+    {
+      "client_id": 1,
+      "n_samples": 129,
+      "class_counts": [
+        6,
+        104,
+        19,
+        0
+      ],
+      "class_fractions": [
+        0.046511627906976744,
+        0.8062015503875969,
+        0.14728682170542637,
+        0.0
+      ]
+    },
+    {
+      "client_id": 2,
+      "n_samples": 142,
+      "class_counts": [
+        24,
+        5,
+        26,
+        87
+      ],
+      "class_fractions": [
+        0.16901408450704225,
+        0.035211267605633804,
+        0.18309859154929578,
+        0.6126760563380281
+      ]
+    },
+    {
+      "client_id": 3,
+      "n_samples": 130,
+      "class_counts": [
+        0,
+        32,
+        1,
+        97
+      ],
+      "class_fractions": [
+        0.0,
+        0.24615384615384617,
+        0.007692307692307693,
+        0.7461538461538462
+      ]
+    },
+    {
+      "client_id": 4,
+      "n_samples": 195,
+      "class_counts": [
+        148,
+        25,
+        9,
+        13
+      ],
+      "class_fractions": [
+        0.7589743589743589,
+        0.1282051282051282,
+        0.046153846153846156,
+        0.06666666666666667
+      ]
+    }
+  ],
+  "initial": {
+    "server_version": 0,
+    "time": 0.0,
+    "val_loss": 1.383192,
+    "val_accuracy": 0.267708,
+    "test_loss": 1.366394,
+    "test_accuracy": 0.260417
+  },
+  "event_log": [
+    {
+      "time": 0.0,
+      "event_type": "DISPATCH",
+      "client_id": 0,
+      "server_version": 0
+    },
+    {
+      "time": 0.0,
+      "event_type": "DISPATCH",
+      "client_id": 1,
+      "server_version": 0
+    },
+    {
+      "time": 0.0,
+      "event_type": "DISPATCH",
+      "client_id": 2,
+      "server_version": 0
+    },
+    {
+      "time": 0.0,
+      "event_type": "DISPATCH",
+      "client_id": 3,
+      "server_version": 0
+    },
+    {
+      "time": 0.0,
+      "event_type": "DISPATCH",
+      "client_id": 4,
+      "server_version": 0
+    },
+    {
+      "time": 1.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 0,
+      "training_version": 0,
+      "local_loss": 1.38103,
+      "num_examples": 244
+    },
+    {
+      "time": 1.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 1,
+      "training_version": 0,
+      "local_loss": 1.335889,
+      "num_examples": 129
+    },
+    {
+      "time": 1.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 2,
+      "training_version": 0,
+      "local_loss": 1.310751,
+      "num_examples": 142
+    },
+    {
+      "time": 1.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 3,
+      "training_version": 0,
+      "local_loss": 1.243694,
+      "num_examples": 130
+    },
+    {
+      "time": 1.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 4,
+      "training_version": 0,
+      "local_loss": 1.328089,
+      "num_examples": 195
+    },
+    {
+      "time": 1.0,
+      "event_type": "UPDATE_ARRIVAL",
+      "arrival_index": 1,
+      "client_id": 0,
+      "client_training_version": 0,
+      "server_version_at_arrival": 0,
+      "staleness": 0,
+      "comm_delay": 0.0,
+      "buffer_size_after": 1
+    },
+    {
+      "time": 1.0,
+      "event_type": "DISPATCH",
+      "client_id": 0,
+      "server_version": 0
+    },
+    {
+      "time": 2.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 0,
+      "training_version": 0,
+      "local_loss": 1.379852,
+      "num_examples": 244
+    },
+    {
+      "time": 2.0,
+      "event_type": "UPDATE_ARRIVAL",
+      "arrival_index": 2,
+      "client_id": 3,
+      "client_training_version": 0,
+      "server_version_at_arrival": 0,
+      "staleness": 0,
+      "comm_delay": 1.0,
+      "buffer_size_after": 2
+    },
+    {
+      "time": 2.0,
+      "event_type": "DISPATCH",
+      "client_id": 3,
+      "server_version": 0
+    },
+    {
+      "time": 2.0,
+      "event_type": "UPDATE_ARRIVAL",
+      "arrival_index": 3,
+      "client_id": 4,
+      "client_training_version": 0,
+      "server_version_at_arrival": 0,
+      "staleness": 0,
+      "comm_delay": 1.0,
+      "buffer_size_after": 3
+    },
+    {
+      "time": 2.0,
+      "event_type": "DISPATCH",
+      "client_id": 4,
+      "server_version": 0
+    },
+    {
+      "time": 3.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 3,
+      "training_version": 0,
+      "local_loss": 1.248885,
+      "num_examples": 130
+    },
+    {
+      "time": 3.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 4,
+      "training_version": 0,
+      "local_loss": 1.334123,
+      "num_examples": 195
+    },
+    {
+      "time": 3.0,
+      "event_type": "UPDATE_ARRIVAL",
+      "arrival_index": 4,
+      "client_id": 2,
+      "client_training_version": 0,
+      "server_version_at_arrival": 0,
+      "staleness": 0,
+      "comm_delay": 2.0,
+      "buffer_size_after": 4
+    },
+    {
+      "time": 3.0,
+      "event_type": "DISPATCH",
+      "client_id": 2,
+      "server_version": 0
+    },
+    {
+      "time": 3.0,
+      "event_type": "UPDATE_ARRIVAL",
+      "arrival_index": 5,
+      "client_id": 3,
+      "client_training_version": 0,
+      "server_version_at_arrival": 0,
+      "staleness": 0,
+      "comm_delay": 0.0,
+      "buffer_size_after": 5
+    },
+    {
+      "time": 3.0,
+      "event_type": "AGGREGATE",
+      "aggregation_index": 1,
+      "server_version_before": 0,
+      "server_version_after": 1,
+      "buffer_size": 5,
+      "client_ids": [
+        0,
+        3,
+        4,
+        2,
+        3
+      ],
+      "per_update_staleness": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "is_final_flush": false,
+      "val_loss": 1.352474,
+      "val_accuracy": 0.304167,
+      "test_loss": 1.333507,
+      "test_accuracy": 0.3375
+    },
+    {
+      "time": 3.0,
+      "event_type": "DISPATCH",
+      "client_id": 3,
+      "server_version": 1
+    },
+    {
+      "time": 4.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 2,
+      "training_version": 0,
+      "local_loss": 1.319275,
+      "num_examples": 142
+    },
+    {
+      "time": 4.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 3,
+      "training_version": 1,
+      "local_loss": 1.236367,
+      "num_examples": 130
+    },
+    {
+      "time": 4.0,
+      "event_type": "UPDATE_ARRIVAL",
+      "arrival_index": 6,
+      "client_id": 1,
+      "client_training_version": 0,
+      "server_version_at_arrival": 1,
+      "staleness": 1,
+      "comm_delay": 3.0,
+      "buffer_size_after": 1
+    },
+    {
+      "time": 4.0,
+      "event_type": "DISPATCH",
+      "client_id": 1,
+      "server_version": 1
+    },
+    {
+      "time": 4.0,
+      "event_type": "UPDATE_ARRIVAL",
+      "arrival_index": 7,
+      "client_id": 2,
+      "client_training_version": 0,
+      "server_version_at_arrival": 1,
+      "staleness": 1,
+      "comm_delay": 0.0,
+      "buffer_size_after": 2
+    },
+    {
+      "time": 4.0,
+      "event_type": "DISPATCH",
+      "client_id": 2,
+      "server_version": 1
+    },
+    {
+      "time": 4.0,
+      "event_type": "UPDATE_ARRIVAL",
+      "arrival_index": 8,
+      "client_id": 3,
+      "client_training_version": 1,
+      "server_version_at_arrival": 1,
+      "staleness": 0,
+      "comm_delay": 0.0,
+      "buffer_size_after": 3
+    },
+    {
+      "time": 4.0,
+      "event_type": "DISPATCH",
+      "client_id": 3,
+      "server_version": 1
+    },
+    {
+      "time": 5.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 1,
+      "training_version": 1,
+      "local_loss": 1.339283,
+      "num_examples": 129
+    },
+    {
+      "time": 5.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 2,
+      "training_version": 1,
+      "local_loss": 1.277791,
+      "num_examples": 142
+    },
+    {
+      "time": 5.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 3,
+      "training_version": 1,
+      "local_loss": 1.238038,
+      "num_examples": 130
+    },
+    {
+      "time": 5.0,
+      "event_type": "UPDATE_ARRIVAL",
+      "arrival_index": 9,
+      "client_id": 0,
+      "client_training_version": 0,
+      "server_version_at_arrival": 1,
+      "staleness": 1,
+      "comm_delay": 3.0,
+      "buffer_size_after": 4
+    },
+    {
+      "time": 5.0,
+      "event_type": "DISPATCH",
+      "client_id": 0,
+      "server_version": 1
+    },
+    {
+      "time": 5.0,
+      "event_type": "UPDATE_ARRIVAL",
+      "arrival_index": 10,
+      "client_id": 4,
+      "client_training_version": 0,
+      "server_version_at_arrival": 1,
+      "staleness": 1,
+      "comm_delay": 2.0,
+      "buffer_size_after": 5
+    },
+    {
+      "time": 5.0,
+      "event_type": "AGGREGATE",
+      "aggregation_index": 2,
+      "server_version_before": 1,
+      "server_version_after": 2,
+      "buffer_size": 5,
+      "client_ids": [
+        1,
+        2,
+        3,
+        0,
+        4
+      ],
+      "per_update_staleness": [
+        1,
+        1,
+        0,
+        1,
+        1
+      ],
+      "is_final_flush": false,
+      "val_loss": 1.34658,
+      "val_accuracy": 0.341667,
+      "test_loss": 1.328979,
+      "test_accuracy": 0.403125
+    },
+    {
+      "time": 5.0,
+      "event_type": "DISPATCH",
+      "client_id": 4,
+      "server_version": 2
+    },
+    {
+      "time": 6.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 0,
+      "training_version": 1,
+      "local_loss": 1.337523,
+      "num_examples": 244
+    },
+    {
+      "time": 6.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 4,
+      "training_version": 2,
+      "local_loss": 1.253127,
+      "num_examples": 195
+    },
+    {
+      "time": 7.0,
+      "event_type": "UPDATE_ARRIVAL",
+      "arrival_index": 11,
+      "client_id": 1,
+      "client_training_version": 1,
+      "server_version_at_arrival": 2,
+      "staleness": 1,
+      "comm_delay": 2.0,
+      "buffer_size_after": 1
+    },
+    {
+      "time": 7.0,
+      "event_type": "DISPATCH",
+      "client_id": 1,
+      "server_version": 2
+    },
+    {
+      "time": 7.0,
+      "event_type": "UPDATE_ARRIVAL",
+      "arrival_index": 12,
+      "client_id": 3,
+      "client_training_version": 1,
+      "server_version_at_arrival": 2,
+      "staleness": 1,
+      "comm_delay": 2.0,
+      "buffer_size_after": 2
+    },
+    {
+      "time": 7.0,
+      "event_type": "DISPATCH",
+      "client_id": 3,
+      "server_version": 2
+    },
+    {
+      "time": 8.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 1,
+      "training_version": 2,
+      "local_loss": 1.255394,
+      "num_examples": 129
+    },
+    {
+      "time": 8.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 3,
+      "training_version": 2,
+      "local_loss": 1.230716,
+      "num_examples": 130
+    },
+    {
+      "time": 8.0,
+      "event_type": "UPDATE_ARRIVAL",
+      "arrival_index": 13,
+      "client_id": 2,
+      "client_training_version": 1,
+      "server_version_at_arrival": 2,
+      "staleness": 1,
+      "comm_delay": 3.0,
+      "buffer_size_after": 3
+    },
+    {
+      "time": 8.0,
+      "event_type": "DISPATCH",
+      "client_id": 2,
+      "server_version": 2
+    },
+    {
+      "time": 8.0,
+      "event_type": "UPDATE_ARRIVAL",
+      "arrival_index": 14,
+      "client_id": 4,
+      "client_training_version": 2,
+      "server_version_at_arrival": 2,
+      "staleness": 0,
+      "comm_delay": 2.0,
+      "buffer_size_after": 4
+    },
+    {
+      "time": 8.0,
+      "event_type": "DISPATCH",
+      "client_id": 4,
+      "server_version": 2
+    },
+    {
+      "time": 9.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 2,
+      "training_version": 2,
+      "local_loss": 1.292821,
+      "num_examples": 142
+    },
+    {
+      "time": 9.0,
+      "event_type": "TRAIN_COMPLETE",
+      "client_id": 4,
+      "training_version": 2,
+      "local_loss": 1.262555,
+      "num_examples": 195
+    },
+    {
+      "time": 9.0,
+      "event_type": "UPDATE_ARRIVAL",
+      "arrival_index": 15,
+      "client_id": 0,
+      "client_training_version": 1,
+      "server_version_at_arrival": 2,
+      "staleness": 1,
+      "comm_delay": 3.0,
+      "buffer_size_after": 5
+    },
+    {
+      "time": 9.0,
+      "event_type": "AGGREGATE",
+      "aggregation_index": 3,
+      "server_version_before": 2,
+      "server_version_after": 3,
+      "buffer_size": 5,
+      "client_ids": [
+        1,
+        3,
+        2,
+        4,
+        0
+      ],
+      "per_update_staleness": [
+        1,
+        1,
+        1,
+        0,
+        1
+      ],
+      "is_final_flush": false,
+      "val_loss": 1.318514,
+      "val_accuracy": 0.541667,
+      "test_loss": 1.298164,
+      "test_accuracy": 0.555208
+    }
+  ],
+  "arrival_log": [
+    {
+      "arrival_index": 1,
+      "client_id": 0,
+      "dispatch_time": 0.0,
+      "train_complete_time": 1.0,
+      "arrival_time": 1.0,
+      "comm_delay": 0.0,
+      "client_training_version": 0,
+      "server_version_at_arrival": 0,
+      "staleness": 0,
+      "sample_count": 244,
+      "local_loss": 1.38103
+    },
+    {
+      "arrival_index": 2,
+      "client_id": 3,
+      "dispatch_time": 0.0,
+      "train_complete_time": 1.0,
+      "arrival_time": 2.0,
+      "comm_delay": 1.0,
+      "client_training_version": 0,
+      "server_version_at_arrival": 0,
+      "staleness": 0,
+      "sample_count": 130,
+      "local_loss": 1.243694
+    },
+    {
+      "arrival_index": 3,
+      "client_id": 4,
+      "dispatch_time": 0.0,
+      "train_complete_time": 1.0,
+      "arrival_time": 2.0,
+      "comm_delay": 1.0,
+      "client_training_version": 0,
+      "server_version_at_arrival": 0,
+      "staleness": 0,
+      "sample_count": 195,
+      "local_loss": 1.328089
+    },
+    {
+      "arrival_index": 4,
+      "client_id": 2,
+      "dispatch_time": 0.0,
+      "train_complete_time": 1.0,
+      "arrival_time": 3.0,
+      "comm_delay": 2.0,
+      "client_training_version": 0,
+      "server_version_at_arrival": 0,
+      "staleness": 0,
+      "sample_count": 142,
+      "local_loss": 1.310751
+    },
+    {
+      "arrival_index": 5,
+      "client_id": 3,
+      "dispatch_time": 2.0,
+      "train_complete_time": 3.0,
+      "arrival_time": 3.0,
+      "comm_delay": 0.0,
+      "client_training_version": 0,
+      "server_version_at_arrival": 0,
+      "staleness": 0,
+      "sample_count": 130,
+      "local_loss": 1.248885
+    },
+    {
+      "arrival_index": 6,
+      "client_id": 1,
+      "dispatch_time": 0.0,
+      "train_complete_time": 1.0,
+      "arrival_time": 4.0,
+      "comm_delay": 3.0,
+      "client_training_version": 0,
+      "server_version_at_arrival": 1,
+      "staleness": 1,
+      "sample_count": 129,
+      "local_loss": 1.335889
+    },
+    {
+      "arrival_index": 7,
+      "client_id": 2,
+      "dispatch_time": 3.0,
+      "train_complete_time": 4.0,
+      "arrival_time": 4.0,
+      "comm_delay": 0.0,
+      "client_training_version": 0,
+      "server_version_at_arrival": 1,
+      "staleness": 1,
+      "sample_count": 142,
+      "local_loss": 1.319275
+    },
+    {
+      "arrival_index": 8,
+      "client_id": 3,
+      "dispatch_time": 3.0,
+      "train_complete_time": 4.0,
+      "arrival_time": 4.0,
+      "comm_delay": 0.0,
+      "client_training_version": 1,
+      "server_version_at_arrival": 1,
+      "staleness": 0,
+      "sample_count": 130,
+      "local_loss": 1.236367
+    },
+    {
+      "arrival_index": 9,
+      "client_id": 0,
+      "dispatch_time": 1.0,
+      "train_complete_time": 2.0,
+      "arrival_time": 5.0,
+      "comm_delay": 3.0,
+      "client_training_version": 0,
+      "server_version_at_arrival": 1,
+      "staleness": 1,
+      "sample_count": 244,
+      "local_loss": 1.379852
+    },
+    {
+      "arrival_index": 10,
+      "client_id": 4,
+      "dispatch_time": 2.0,
+      "train_complete_time": 3.0,
+      "arrival_time": 5.0,
+      "comm_delay": 2.0,
+      "client_training_version": 0,
+      "server_version_at_arrival": 1,
+      "staleness": 1,
+      "sample_count": 195,
+      "local_loss": 1.334123
+    },
+    {
+      "arrival_index": 11,
+      "client_id": 1,
+      "dispatch_time": 4.0,
+      "train_complete_time": 5.0,
+      "arrival_time": 7.0,
+      "comm_delay": 2.0,
+      "client_training_version": 1,
+      "server_version_at_arrival": 2,
+      "staleness": 1,
+      "sample_count": 129,
+      "local_loss": 1.339283
+    },
+    {
+      "arrival_index": 12,
+      "client_id": 3,
+      "dispatch_time": 4.0,
+      "train_complete_time": 5.0,
+      "arrival_time": 7.0,
+      "comm_delay": 2.0,
+      "client_training_version": 1,
+      "server_version_at_arrival": 2,
+      "staleness": 1,
+      "sample_count": 130,
+      "local_loss": 1.238038
+    },
+    {
+      "arrival_index": 13,
+      "client_id": 2,
+      "dispatch_time": 4.0,
+      "train_complete_time": 5.0,
+      "arrival_time": 8.0,
+      "comm_delay": 3.0,
+      "client_training_version": 1,
+      "server_version_at_arrival": 2,
+      "staleness": 1,
+      "sample_count": 142,
+      "local_loss": 1.277791
+    },
+    {
+      "arrival_index": 14,
+      "client_id": 4,
+      "dispatch_time": 5.0,
+      "train_complete_time": 6.0,
+      "arrival_time": 8.0,
+      "comm_delay": 2.0,
+      "client_training_version": 2,
+      "server_version_at_arrival": 2,
+      "staleness": 0,
+      "sample_count": 195,
+      "local_loss": 1.253127
+    },
+    {
+      "arrival_index": 15,
+      "client_id": 0,
+      "dispatch_time": 5.0,
+      "train_complete_time": 6.0,
+      "arrival_time": 9.0,
+      "comm_delay": 3.0,
+      "client_training_version": 1,
+      "server_version_at_arrival": 2,
+      "staleness": 1,
+      "sample_count": 244,
+      "local_loss": 1.337523
+    }
+  ],
+  "aggregation_log": [
+    {
+      "aggregation_index": 1,
+      "time": 3.0,
+      "server_version_before": 0,
+      "server_version_after": 1,
+      "buffer_size": 5,
+      "client_ids": [
+        0,
+        3,
+        4,
+        2,
+        3
+      ],
+      "per_update_staleness": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "mean_staleness": 0.0,
+      "sample_weighted_aggregation_details": [
+        {
+          "client_id": 0,
+          "sample_count": 244,
+          "weight": 0.290131,
+          "staleness": 0
+        },
+        {
+          "client_id": 3,
+          "sample_count": 130,
+          "weight": 0.154578,
+          "staleness": 0
+        },
+        {
+          "client_id": 4,
+          "sample_count": 195,
+          "weight": 0.231867,
+          "staleness": 0
+        },
+        {
+          "client_id": 2,
+          "sample_count": 142,
+          "weight": 0.168847,
+          "staleness": 0
+        },
+        {
+          "client_id": 3,
+          "sample_count": 130,
+          "weight": 0.154578,
+          "staleness": 0
+        }
+      ],
+      "total_samples": 841,
+      "is_final_flush": false,
+      "val_loss": 1.352474,
+      "val_accuracy": 0.304167,
+      "test_loss": 1.333507,
+      "test_accuracy": 0.3375
+    },
+    {
+      "aggregation_index": 2,
+      "time": 5.0,
+      "server_version_before": 1,
+      "server_version_after": 2,
+      "buffer_size": 5,
+      "client_ids": [
+        1,
+        2,
+        3,
+        0,
+        4
+      ],
+      "per_update_staleness": [
+        1,
+        1,
+        0,
+        1,
+        1
+      ],
+      "mean_staleness": 0.8,
+      "sample_weighted_aggregation_details": [
+        {
+          "client_id": 1,
+          "sample_count": 129,
+          "weight": 0.153571,
+          "staleness": 1
+        },
+        {
+          "client_id": 2,
+          "sample_count": 142,
+          "weight": 0.169048,
+          "staleness": 1
+        },
+        {
+          "client_id": 3,
+          "sample_count": 130,
+          "weight": 0.154762,
+          "staleness": 0
+        },
+        {
+          "client_id": 0,
+          "sample_count": 244,
+          "weight": 0.290476,
+          "staleness": 1
+        },
+        {
+          "client_id": 4,
+          "sample_count": 195,
+          "weight": 0.232143,
+          "staleness": 1
+        }
+      ],
+      "total_samples": 840,
+      "is_final_flush": false,
+      "val_loss": 1.34658,
+      "val_accuracy": 0.341667,
+      "test_loss": 1.328979,
+      "test_accuracy": 0.403125
+    },
+    {
+      "aggregation_index": 3,
+      "time": 9.0,
+      "server_version_before": 2,
+      "server_version_after": 3,
+      "buffer_size": 5,
+      "client_ids": [
+        1,
+        3,
+        2,
+        4,
+        0
+      ],
+      "per_update_staleness": [
+        1,
+        1,
+        1,
+        0,
+        1
+      ],
+      "mean_staleness": 0.8,
+      "sample_weighted_aggregation_details": [
+        {
+          "client_id": 1,
+          "sample_count": 129,
+          "weight": 0.153571,
+          "staleness": 1
+        },
+        {
+          "client_id": 3,
+          "sample_count": 130,
+          "weight": 0.154762,
+          "staleness": 1
+        },
+        {
+          "client_id": 2,
+          "sample_count": 142,
+          "weight": 0.169048,
+          "staleness": 1
+        },
+        {
+          "client_id": 4,
+          "sample_count": 195,
+          "weight": 0.232143,
+          "staleness": 0
+        },
+        {
+          "client_id": 0,
+          "sample_count": 244,
+          "weight": 0.290476,
+          "staleness": 1
+        }
+      ],
+      "total_samples": 840,
+      "is_final_flush": false,
+      "val_loss": 1.318514,
+      "val_accuracy": 0.541667,
+      "test_loss": 1.298164,
+      "test_accuracy": 0.555208
+    }
+  ],
+  "history": [
+    {
+      "aggregation_index": 1,
+      "server_version": 1,
+      "time": 3.0,
+      "buffer_size": 5,
+      "is_final_flush": false,
+      "val_loss": 1.352474,
+      "val_accuracy": 0.304167,
+      "test_loss": 1.333507,
+      "test_accuracy": 0.3375
+    },
+    {
+      "aggregation_index": 2,
+      "server_version": 2,
+      "time": 5.0,
+      "buffer_size": 5,
+      "is_final_flush": false,
+      "val_loss": 1.34658,
+      "val_accuracy": 0.341667,
+      "test_loss": 1.328979,
+      "test_accuracy": 0.403125
+    },
+    {
+      "aggregation_index": 3,
+      "server_version": 3,
+      "time": 9.0,
+      "buffer_size": 5,
+      "is_final_flush": false,
+      "val_loss": 1.318514,
+      "val_accuracy": 0.541667,
+      "test_loss": 1.298164,
+      "test_accuracy": 0.555208
+    }
+  ],
+  "test": {
+    "loss": 1.298164,
+    "accuracy": 0.555208
+  },
+  "validation": {
+    "loss": 1.318514,
+    "accuracy": 0.541667
+  },
+  "summary": {
+    "algorithm": "FedBuff",
+    "arrival_count": 15,
+    "buffered_update_count": 15,
+    "applied_update_count": 15,
+    "server_aggregation_count": 3,
+    "final_server_version": 3,
+    "buffer_size_k": 5,
+    "unflushed_final_buffer_count": 0,
+    "discarded_final_buffer_count": 0,
+    "final_buffer_flushed": false,
+    "mean_staleness": 0.5333,
+    "min_staleness": 0,
+    "max_staleness": 1,
+    "total_simulated_time": 9.0,
+    "client_arrival_counts": {
+      "0": 3,
+      "1": 2,
+      "2": 3,
+      "3": 4,
+      "4": 3
+    },
+    "client_applied_counts": {
+      "0": 3,
+      "1": 2,
+      "2": 3,
+      "3": 4,
+      "4": 3
+    },
+    "final_validation_accuracy": 0.541667,
+    "final_validation_loss": 1.318514,
+    "final_test_accuracy": 0.555208,
+    "final_test_loss": 1.298164
+  },
+  "arrival_count": 15,
+  "buffered_update_count": 15,
+  "applied_update_count": 15,
+  "server_aggregation_count": 3,
+  "final_server_version": 3,
+  "unflushed_buffer_count": 0,
+  "final_buffer_flushed": false,
+  "final_test_accuracy": 0.555208,
+  "final_test_loss": 1.298164,
+  "final_validation_accuracy": 0.541667,
+  "final_validation_loss": 1.318514,
+  "mean_staleness": 0.5333,
+  "max_staleness": 1
+}

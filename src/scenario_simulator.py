@@ -50,6 +50,23 @@ from src.scenarios import (
     get_named_scenario,
 )
 from src.trainer import evaluate
+from src.divergence_metrics import (
+    aggregate_buffer_predictors,
+    compute_all_predictors,
+    flatten_params,
+)
+from src.fairness_metrics import (
+    compile_fairness_summary,
+    evaluate_per_class_held_out,
+)
+from src.impact_metrics import (
+    compute_action_impact,
+    evaluate_model_loss,
+)
+from src.predictor_analysis import (
+    analyze_action_observations,
+    export_actions_to_csv,
+)
 
 
 def get_git_commit() -> str:
@@ -82,6 +99,8 @@ class ScenarioSimulator:
         lr: float = 0.01,
         dataset_config: Optional[SyntheticDatasetConfig] = None,
         model_config: Optional[MLPConfig] = None,
+        enable_analysis: bool = False,
+        impact_tolerance: float = 1e-5,
     ) -> None:
         self.scenario_config = scenario_config
         self.algorithm = algorithm
@@ -212,6 +231,13 @@ class ScenarioSimulator:
         self.per_client_arrivals: Dict[int, int] = collections.defaultdict(int)
         self.per_client_applied: Dict[int, int] = collections.defaultdict(int)
         self.per_tier_applied: Dict[str, int] = collections.defaultdict(int)
+        self.client_samples_uploaded: Dict[int, int] = collections.defaultdict(int)
+
+        # Phase 15 Divergence-vs-Staleness Analysis
+        self.enable_analysis: bool = enable_analysis
+        self.impact_tolerance: float = impact_tolerance
+        self.prev_server_delta: Optional[torch.Tensor] = None
+        self.action_observations: List[Dict[str, Any]] = []
 
     def _assign_profiles(self) -> List[ClientProfile]:
         """Assign fast/medium/slow profiles to clients based on configured tier distribution."""
@@ -428,6 +454,7 @@ class ScenarioSimulator:
                 job["train_complete_time"] = train_complete_time
                 job["compute_duration"] = compute_duration
                 job["n_samples"] = n_samples
+                job["base_params"] = copy.deepcopy(training_params)
 
                 self.event_log.append({
                     "time": round(float(event_time), 4),
@@ -646,6 +673,7 @@ class ScenarioSimulator:
                 self.arrival_count += 1
                 self.total_bytes_transferred += self.model_bytes
                 self.per_client_arrivals[cid] += 1
+                self.client_samples_uploaded[cid] += job["n_samples"]
 
                 client_training_version = job["training_version"]
                 server_version_at_arrival = self.server_version
@@ -685,6 +713,20 @@ class ScenarioSimulator:
                     weight = compute_fedasync_weight(staleness, self.alpha_0)
                     server_version_before = self.server_version
 
+                    if self.enable_analysis:
+                        val_loss_before = evaluate_model_loss(self.server_model, self.val_loader)
+                        server_params_before = copy.deepcopy(self.server_params)
+                        base_params_used = job.get("base_params", server_params_before)
+                        pred_dict = compute_all_predictors(
+                            client_params=trained_params,
+                            base_params=base_params_used,
+                            server_params=server_params_before,
+                            prev_server_delta=self.prev_server_delta,
+                            client_train_version=client_training_version,
+                            server_version=server_version_before,
+                            local_loss=local_loss,
+                        )
+
                     self.server_params = fedasync_aggregate_parameters(
                         self.server_params, trained_params, weight
                     )
@@ -698,6 +740,34 @@ class ScenarioSimulator:
 
                     val_m = evaluate(self.server_model, self.val_loader, self.criterion)
                     test_m = evaluate(self.server_model, self.test_loader, self.criterion)
+
+                    if self.enable_analysis:
+                        val_loss_after = evaluate_model_loss(self.server_model, self.val_loader)
+                        impact_res = compute_action_impact(
+                            val_loss_before=val_loss_before,
+                            val_loss_after=val_loss_after,
+                            tolerance=self.impact_tolerance,
+                        )
+                        self.prev_server_delta = flatten_params(self.server_params) - flatten_params(server_params_before)
+                        self.action_observations.append({
+                            "action_id": self.server_aggregation_count,
+                            "scenario": self.scenario_config.scenario_name,
+                            "algorithm": self.algorithm,
+                            "seed": self.scenario_config.data_seed,
+                            "virtual_time": round(float(event_time), 4),
+                            "client_id": cid,
+                            "staleness": pred_dict["staleness"],
+                            "update_l2_norm": pred_dict["update_l2_norm"],
+                            "relative_update_norm": pred_dict["relative_update_norm"],
+                            "current_model_divergence": pred_dict["current_model_divergence"],
+                            "cosine_disagreement": pred_dict["cosine_disagreement"],
+                            "cosine_available": pred_dict["cosine_available"],
+                            "local_loss": pred_dict["local_loss"],
+                            "val_loss_before": impact_res["val_loss_before"],
+                            "val_loss_after": impact_res["val_loss_after"],
+                            "impact": impact_res["impact"],
+                            "is_harmful": impact_res["is_harmful"],
+                        })
 
                     agg_record = {
                         "aggregation_index": self.server_aggregation_count,
@@ -741,6 +811,20 @@ class ScenarioSimulator:
                         "client_training_version": client_training_version,
                         "speed_tier": profile.speed_tier,
                     }
+                    if self.enable_analysis:
+                        base_params_used = job.get("base_params", self.server_params)
+                        arr_preds = compute_all_predictors(
+                            client_params=trained_params,
+                            base_params=base_params_used,
+                            server_params=self.server_params,
+                            prev_server_delta=self.prev_server_delta,
+                            client_train_version=client_training_version,
+                            server_version=server_version_at_arrival,
+                            local_loss=local_loss,
+                        )
+                        buffered_item["arrival_predictors"] = arr_preds
+                        buffered_item["base_params"] = base_params_used
+                        buffered_item["local_loss"] = local_loss
                     self.buffer.append(buffered_item)
 
                     self.event_log.append({
@@ -790,6 +874,38 @@ class ScenarioSimulator:
         min_stale = int(np.min(staleness_vals)) if staleness_vals else 0
 
         pending_jobs = len([j for j in self.active_jobs.values() if j["status"] in {"DOWNLOADING", "TRAINING", "UPLOADING", "RETAINED"}])
+
+        # Phase 15 Fairness and Predictor Analysis compilation
+        analysis_data: Optional[Dict[str, Any]] = None
+        if self.enable_analysis:
+            all_client_ids = list(range(self.scenario_config.n_clients))
+            client_tiers = {p.client_id: p.speed_tier for p in self.profiles}
+            client_label_counts = {}
+            for cid in all_client_ids:
+                part_id = self.profiles[cid].data_partition_id
+                counts_list = self.partition_stats[part_id]["class_counts"]
+                client_label_counts[cid] = {c: count for c, count in enumerate(counts_list)}
+            held_out_metrics = evaluate_per_class_held_out(
+                model=self.server_model,
+                data_loader=self.val_loader,
+                num_classes=self.dataset_config.n_classes,
+            )
+            fairness_summary = compile_fairness_summary(
+                all_client_ids=all_client_ids,
+                client_arrivals=self.per_client_arrivals,
+                client_applied=self.per_client_applied,
+                client_samples_uploaded=self.client_samples_uploaded,
+                client_tiers=client_tiers,
+                client_label_counts=client_label_counts,
+                held_out_metrics=held_out_metrics,
+            )
+            stat_analysis = analyze_action_observations(self.action_observations)
+            analysis_data = {
+                "action_observations": self.action_observations,
+                "action_count": len(self.action_observations),
+                "statistical_evaluation": stat_analysis,
+                "fairness_and_representation": fairness_summary,
+            }
 
         results: Dict[str, Any] = {
             "config": {
@@ -882,6 +998,9 @@ class ScenarioSimulator:
             "max_staleness": max_stale,
         }
 
+        if self.enable_analysis and analysis_data is not None:
+            results["analysis"] = analysis_data
+
         return results
 
     def _aggregate_fedbuff_buffer(self, is_final_flush: bool, event_time: float) -> None:
@@ -892,6 +1011,35 @@ class ScenarioSimulator:
         items = list(self.buffer)
         total_samples = sum(u["sample_count"] for u in items)
         server_version_before = self.server_version
+
+        if self.enable_analysis:
+            val_loss_before = evaluate_model_loss(self.server_model, self.val_loader)
+            server_params_before = copy.deepcopy(self.server_params)
+            member_app_preds = []
+            member_deltas = []
+            member_weights = []
+            for u in items:
+                m_base = u.get("base_params", server_params_before)
+                m_pred = compute_all_predictors(
+                    client_params=u["trained_params"],
+                    base_params=m_base,
+                    server_params=server_params_before,
+                    prev_server_delta=self.prev_server_delta,
+                    client_train_version=u["client_training_version"],
+                    server_version=server_version_before,
+                    local_loss=u.get("local_loss"),
+                )
+                member_app_preds.append(m_pred)
+                w = float(u["sample_count"] / total_samples) if total_samples > 0 else 0.0
+                member_weights.append(w)
+                delta_u = flatten_params(u["trained_params"]) - flatten_params(m_base)
+                member_deltas.append(w * delta_u)
+            joint_delta = torch.stack(member_deltas).sum(dim=0)
+            buf_preds = aggregate_buffer_predictors(
+                member_predictors=member_app_preds,
+                joint_delta=joint_delta,
+                prev_server_delta=self.prev_server_delta,
+            )
 
         self.server_params = aggregate_buffered_parameters(items)
         set_model_parameters(self.server_model, self.server_params)
@@ -909,6 +1057,40 @@ class ScenarioSimulator:
 
         val_m = evaluate(self.server_model, self.val_loader, self.criterion)
         test_m = evaluate(self.server_model, self.test_loader, self.criterion)
+
+        if self.enable_analysis:
+            val_loss_after = evaluate_model_loss(self.server_model, self.val_loader)
+            impact_res = compute_action_impact(
+                val_loss_before=val_loss_before,
+                val_loss_after=val_loss_after,
+                tolerance=self.impact_tolerance,
+            )
+            self.prev_server_delta = flatten_params(self.server_params) - flatten_params(server_params_before)
+            self.action_observations.append({
+                "action_id": self.server_aggregation_count,
+                "scenario": self.scenario_config.scenario_name,
+                "algorithm": self.algorithm,
+                "seed": self.scenario_config.data_seed,
+                "virtual_time": round(float(event_time), 4),
+                "client_id": "buffer_" + "_".join(str(u["client_id"]) for u in items),
+                "client_ids": [u["client_id"] for u in items],
+                "buffer_size": len(items),
+                "member_weights": [round(float(w), 6) for w in member_weights],
+                "staleness": buf_preds["mean_staleness"],
+                "max_staleness": buf_preds["max_staleness"],
+                "update_l2_norm": buf_preds["mean_update_l2_norm"],
+                "relative_update_norm": buf_preds["mean_relative_norm"],
+                "current_model_divergence": buf_preds["mean_divergence"],
+                "cosine_disagreement": buf_preds["buffer_cosine_disagreement"],
+                "cosine_available": buf_preds["buffer_cosine_available"],
+                "local_loss": round(float(np.mean([u.get("local_loss", 0.0) for u in items])), 6),
+                "val_loss_before": impact_res["val_loss_before"],
+                "val_loss_after": impact_res["val_loss_after"],
+                "impact": impact_res["impact"],
+                "is_harmful": impact_res["is_harmful"],
+                "member_arrival_predictors": [u.get("arrival_predictors") for u in items],
+                "member_application_predictors": member_app_preds,
+            })
 
         # Log staleness at both arrival and application
         application_staleness = [int(server_version_before - u["client_training_version"]) for u in items]
@@ -948,13 +1130,18 @@ def run_scenario_simulation(
     buffer_size: int = 5,
     flush_final_buffer: bool = False,
     output_path: Optional[Union[str, Path]] = None,
+    enable_analysis: bool = False,
+    impact_tolerance: float = 1e-5,
+    export_actions_csv: Optional[Union[str, Path]] = None,
 ) -> Dict[str, Any]:
-    """Execute scenario simulation and optionally save output JSON."""
+    """Execute scenario simulation and optionally save output JSON and action CSV."""
     sim = ScenarioSimulator(
         scenario_config=scenario_config,
         algorithm=algorithm,
         buffer_size=buffer_size,
         flush_final_buffer=flush_final_buffer,
+        enable_analysis=enable_analysis,
+        impact_tolerance=impact_tolerance,
     )
     results = sim.run_simulation()
 
@@ -963,6 +1150,14 @@ def run_scenario_simulation(
         p.parent.mkdir(parents=True, exist_ok=True)
         with open(p, "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2)
+
+        # Auto-export matching action CSV if analysis enabled and not explicitly specified
+        if enable_analysis and export_actions_csv is None and "analysis" in results:
+            csv_path = p.parent / f"{p.stem}_actions.csv"
+            export_actions_to_csv(results["analysis"]["action_observations"], csv_path)
+
+    if export_actions_csv is not None and "analysis" in results:
+        export_actions_to_csv(results["analysis"]["action_observations"], export_actions_csv)
 
     return results
 
@@ -977,6 +1172,11 @@ def main() -> None:
     parser.add_argument("--flush-final-buffer", action="store_true", default=False, help="Flush incomplete final buffer in FedBuff")
     parser.add_argument("--seed", type=int, default=42, help="Master random seed")
     parser.add_argument("--output", type=str, default=None, help="Output JSON path")
+    parser.add_argument("--analysis", action="store_true", default=False, help="Enable Phase 15 divergence and impact analysis")
+    parser.add_argument("--tolerance", type=float, default=1e-5, help="Harmful impact loss tolerance")
+    parser.add_argument("--export-actions-csv", type=str, default=None, help="Path to export action-level CSV")
+    parser.add_argument("--max-attempted-jobs", type=int, default=None, help="Explicit attempted-job cap")
+    parser.add_argument("--max-virtual-time", type=float, default=None, help="Explicit virtual-time cap")
 
     args = parser.parse_args()
 
@@ -997,6 +1197,10 @@ def main() -> None:
     cfg.profile_seed = args.seed
     cfg.network_seed = args.seed
     cfg.dropout_seed = args.seed
+    if args.max_attempted_jobs is not None:
+        cfg.max_attempted_jobs = args.max_attempted_jobs
+    if args.max_virtual_time is not None:
+        cfg.max_virtual_time = args.max_virtual_time
 
     results = run_scenario_simulation(
         scenario_config=cfg,
@@ -1004,6 +1208,9 @@ def main() -> None:
         buffer_size=args.buffer_size,
         flush_final_buffer=args.flush_final_buffer,
         output_path=args.output,
+        enable_analysis=args.analysis,
+        impact_tolerance=args.tolerance,
+        export_actions_csv=args.export_actions_csv,
     )
 
     print(

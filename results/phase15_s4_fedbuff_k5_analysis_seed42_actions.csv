@@ -1,0 +1,7 @@
+action_id,scenario,algorithm,seed,virtual_time,client_id,staleness,update_l2_norm,relative_update_norm,current_model_divergence,cosine_disagreement,cosine_available,local_loss,val_loss_before,val_loss_after,impact,is_harmful
+1,S4_unreliable_iot,FedBuff,42,0.4942,buffer_4_4_4_4_3,0.0,0.225658,0.038377,0.038377,,False,1.312817,1.381931,1.371883,0.010048,False
+2,S4_unreliable_iot,FedBuff,42,0.8457,buffer_0_4_4_4_0,0.4,0.237687,0.040401,0.036536,0.278218,True,1.264417,1.371883,1.335379,0.036504,False
+3,S4_unreliable_iot,FedBuff,42,1.187,buffer_4_3_4_4_0,0.4,0.219099,0.0372,0.039057,0.332889,True,1.168199,1.335379,1.321087,0.014292,False
+4,S4_unreliable_iot,FedBuff,42,1.4345,buffer_3_4_2_4_4,1.0,0.199307,0.03379,0.041931,0.025566,True,1.102992,1.321087,1.322314,-0.001227,True
+5,S4_unreliable_iot,FedBuff,42,1.7511,buffer_3_0_4_4_3,0.4,0.210542,0.035603,0.037209,0.419324,True,1.130447,1.322314,1.281446,0.040868,False
+6,S4_unreliable_iot,FedBuff,42,2.0325,buffer_4_0_4_4_3,0.4,0.233887,0.03947,0.035834,0.086411,True,1.018863,1.281446,1.266755,0.014691,False

@@ -160,5 +160,140 @@ class TestScenarioSimulator(unittest.TestCase):
         self.assertEqual(res["summary"]["final_server_version"], 2)
 
 
+    def test_analysis_enabled_versus_disabled_invariance(self) -> None:
+        """Verify that enabling analysis leaves simulation trajectory, server parameters, and all RNG states bit-for-bit invariant."""
+        import numpy as np
+        import torch
+        import random
+
+        # Run with analysis disabled
+        torch.manual_seed(42)
+        np.random.seed(42)
+        random.seed(42)
+        cfg1 = get_scenario_s4(n_clients=5, target_updates=10)
+        sim_off = ScenarioSimulator(cfg1, algorithm="FedAsync", enable_analysis=False)
+        res_off = sim_off.run_simulation()
+        rng_torch_off = torch.get_rng_state()
+        rng_np_off = np.random.get_state()
+        rng_py_off = random.getstate()
+
+        # Run with analysis enabled
+        torch.manual_seed(42)
+        np.random.seed(42)
+        random.seed(42)
+        cfg2 = get_scenario_s4(n_clients=5, target_updates=10)
+        sim_on = ScenarioSimulator(cfg2, algorithm="FedAsync", enable_analysis=True)
+        res_on = sim_on.run_simulation()
+        rng_torch_on = torch.get_rng_state()
+        rng_np_on = np.random.get_state()
+        rng_py_on = random.getstate()
+
+        # 1. Complete RNG state invariance across Torch, NumPy (full tuple), and Python random
+        self.assertTrue(torch.equal(rng_torch_off, rng_torch_on))
+        self.assertEqual(rng_np_off[0], rng_np_on[0])
+        self.assertTrue(np.array_equal(rng_np_off[1], rng_np_on[1]))
+        self.assertEqual(rng_np_off[2], rng_np_on[2])
+        self.assertEqual(rng_np_off[3], rng_np_on[3])
+        self.assertEqual(rng_np_off[4], rng_np_on[4])
+        self.assertEqual(rng_py_off, rng_py_on)
+
+        # 2. Identical stopping reason and update count
+        self.assertEqual(res_off["stopping_reason"], res_on["stopping_reason"])
+        self.assertEqual(res_off["applied_updates"], res_on["applied_updates"])
+        self.assertEqual(res_off["total_virtual_time_s"], res_on["total_virtual_time_s"])
+        self.assertEqual(res_off["total_bytes_transferred"], res_on["total_bytes_transferred"])
+
+        # 3. Identical final server evaluation metrics
+        self.assertAlmostEqual(res_off["final_test_loss"], res_on["final_test_loss"], places=6)
+        self.assertAlmostEqual(res_off["final_test_accuracy"], res_on["final_test_accuracy"], places=6)
+        self.assertAlmostEqual(res_off["final_validation_loss"], res_on["final_validation_loss"], places=6)
+        self.assertAlmostEqual(res_off["final_validation_accuracy"], res_on["final_validation_accuracy"], places=6)
+
+        # 4. Identical arrival and aggregation sequences (client order and virtual time)
+        self.assertEqual(len(res_off["arrival_log"]), len(res_on["arrival_log"]))
+        for a_off, a_on in zip(res_off["arrival_log"], res_on["arrival_log"]):
+            self.assertEqual(a_off["client_id"], a_on["client_id"])
+            self.assertEqual(a_off["job_id"], a_on["job_id"])
+            self.assertEqual(a_off["arrival_time"], a_on["arrival_time"])
+            self.assertEqual(a_off["staleness"], a_on["staleness"])
+            self.assertAlmostEqual(a_off["local_loss"], a_on["local_loss"], places=5)
+
+        # 5. Final server parameters are bit-for-bit identical
+        for p_off, p_on in zip(sim_off.server_params, sim_on.server_params):
+            self.assertTrue(np.array_equal(p_off, p_on))
+            self.assertTrue(np.allclose(p_off, p_on, atol=1e-6))
+
+        # 6. Analysis block is present ONLY in res_on
+        self.assertNotIn("analysis", res_off)
+        self.assertIn("analysis", res_on)
+        self.assertEqual(len(res_on["analysis"]["action_observations"]), 10)
+
+    def test_fedbuff_analysis_enabled_versus_disabled_invariance(self) -> None:
+        """Verify FedBuff analysis enabled vs disabled leaves simulation trajectory and RNG unchanged."""
+        import numpy as np
+        import torch
+        import random
+
+        # Run with analysis disabled
+        torch.manual_seed(42)
+        np.random.seed(42)
+        random.seed(42)
+        cfg1 = get_scenario_s4(n_clients=5, target_updates=10)
+        sim_off = ScenarioSimulator(cfg1, algorithm="FedBuff", buffer_size=5, enable_analysis=False)
+        res_off = sim_off.run_simulation()
+        rng_torch_off = torch.get_rng_state()
+        rng_np_off = np.random.get_state()
+        rng_py_off = random.getstate()
+
+        # Run with analysis enabled
+        torch.manual_seed(42)
+        np.random.seed(42)
+        random.seed(42)
+        cfg2 = get_scenario_s4(n_clients=5, target_updates=10)
+        sim_on = ScenarioSimulator(cfg2, algorithm="FedBuff", buffer_size=5, enable_analysis=True)
+        res_on = sim_on.run_simulation()
+        rng_torch_on = torch.get_rng_state()
+        rng_np_on = np.random.get_state()
+        rng_py_on = random.getstate()
+
+        # 1. Complete RNG state invariance across Torch, NumPy (full tuple), and Python random
+        self.assertTrue(torch.equal(rng_torch_off, rng_torch_on))
+        self.assertEqual(rng_np_off[0], rng_np_on[0])
+        self.assertTrue(np.array_equal(rng_np_off[1], rng_np_on[1]))
+        self.assertEqual(rng_np_off[2], rng_np_on[2])
+        self.assertEqual(rng_np_off[3], rng_np_on[3])
+        self.assertEqual(rng_np_off[4], rng_np_on[4])
+        self.assertEqual(rng_py_off, rng_py_on)
+
+        # 2. Identical simulation trajectory
+        self.assertEqual(res_off["stopping_reason"], res_on["stopping_reason"])
+        self.assertEqual(res_off["applied_updates"], res_on["applied_updates"])
+        self.assertEqual(res_off["total_virtual_time_s"], res_on["total_virtual_time_s"])
+        self.assertEqual(res_off["total_bytes_transferred"], res_on["total_bytes_transferred"])
+        self.assertAlmostEqual(res_off["final_test_loss"], res_on["final_test_loss"], places=6)
+        self.assertAlmostEqual(res_off["final_test_accuracy"], res_on["final_test_accuracy"], places=6)
+        self.assertAlmostEqual(res_off["final_validation_loss"], res_on["final_validation_loss"], places=6)
+        self.assertAlmostEqual(res_off["final_validation_accuracy"], res_on["final_validation_accuracy"], places=6)
+
+        # 3. Identical arrival and aggregation sequences
+        self.assertEqual(len(res_off["arrival_log"]), len(res_on["arrival_log"]))
+        for a_off, a_on in zip(res_off["arrival_log"], res_on["arrival_log"]):
+            self.assertEqual(a_off["client_id"], a_on["client_id"])
+            self.assertEqual(a_off["job_id"], a_on["job_id"])
+            self.assertEqual(a_off["arrival_time"], a_on["arrival_time"])
+            self.assertEqual(a_off["staleness"], a_on["staleness"])
+            self.assertAlmostEqual(a_off["local_loss"], a_on["local_loss"], places=5)
+
+        # 4. Final server parameters are bit-for-bit identical
+        for p_off, p_on in zip(sim_off.server_params, sim_on.server_params):
+            self.assertTrue(np.array_equal(p_off, p_on))
+            self.assertTrue(np.allclose(p_off, p_on, atol=1e-6))
+
+        # 5. Analysis block is present ONLY in res_on
+        self.assertNotIn("analysis", res_off)
+        self.assertIn("analysis", res_on)
+        self.assertEqual(len(res_on["analysis"]["action_observations"]), 2)
+
+
 if __name__ == "__main__":
     unittest.main()

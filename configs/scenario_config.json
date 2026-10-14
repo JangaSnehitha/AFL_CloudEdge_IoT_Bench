@@ -1,0 +1,22 @@
+{
+  "scenario_name": "S1_stable_edge",
+  "description": "Default dynamic Cloud-Edge IoT scenario configuration",
+  "n_clients": 5,
+  "target_applied_updates": 15,
+  "max_attempted_jobs": 100,
+  "max_virtual_time": 1000.0,
+  "rejoin_policy": "fresh_restart",
+  "job_failure_probability": 0.0,
+  "tier_distribution": {
+    "fast": 0.4,
+    "medium": 0.6,
+    "slow": 0.0
+  },
+  "coupling_enabled": false,
+  "partition_method": "dirichlet",
+  "alpha": 0.5,
+  "data_seed": 42,
+  "profile_seed": 42,
+  "network_seed": 42,
+  "dropout_seed": 42
+}
